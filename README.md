@@ -46,7 +46,7 @@ Start Offset:
 If the Stream should not start immediately, an offset can be configured, in seconds. Streams with an offset will start in the scheduled state, indicating their start time in the stream card. When the start time is reached, the streams will start automatically for the duration specified.
 # **API Documentation**
 ### **Base URL**
-- The API is served at the base URL: http://srtstreamer.cloud.ts-stage.net/
+- The API is served at the base URL.
 -----
 ## **Authentication**
 - **API Key Authentication**: Each user must include a valid x-api-key header in requests to authenticate.
