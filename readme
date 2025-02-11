@@ -1,0 +1,16 @@
+
+
+SRTStreamer
+
+REST API Endpoints:
+
+/start-stream: Initiates streaming of a video/audio file. Supports:
+Specifying a URL to download the file.
+Randomly selecting a file from a predefined directory if no URL is provided.
+Setting a maximum number of concurrent streams (up to 10).
+/stop-stream/{stream_id}: Stops a specific streaming session using the provided stream_id.
+/stream-status/{stream_id}: Retrieves the current status of a specified streaming session, including download progress and streaming status.
+File Downloading: Automatically downloads media files from provided URLs before streaming them.
+
+Concurrency Management: Utilizes background threads to manage file downloads and streaming processes without blocking API responses.
+

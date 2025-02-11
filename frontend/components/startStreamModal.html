@@ -1,0 +1,138 @@
+<div class="modal fade" id="startStreamModal" tabindex="-1" aria-labelledby="startStreamModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="startStreamModalLabel">Add New Stream</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="start-stream-form">
+
+                    <!-- File Selection Type -->
+                    <div class="form-group">
+                        <label for="fileSelection">File Selection</label>
+                        <select class="form-control" id="fileSelection">
+                            <option value="random" selected>Random File</option>
+                            <option value="select">Select File</option>
+                        </select>
+                    </div>
+
+                    <!-- File Selector (Hidden by Default) -->
+                    <div class="form-group" id="fileSelectorContainer" style="display: none;">
+                        <label for="fileList">Choose a File</label>
+                        <select class="form-control" id="fileList">
+                            <option value="" disabled selected>Loading files...</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="duration">Duration (seconds)</label>
+                        <input type="number" class="form-control" id="duration" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="destination">Primary Destination</label>
+                        <input type="text" class="form-control" id="destination" placeholder="srt://1.1.1.1:1111" required>
+                    </div>
+
+                    <div class="form-group form-check">
+                        <input type="checkbox" class="form-check-input" id="redundant">
+                        <label class="form-check-label" for="redundant">Enable Redundancy</label>
+                    </div>
+                    
+                    <div class="form-group" id="secondaryDestinationContainer" style="display: none;">
+                        <label for="destination_secondary">Secondary Destination</label>
+                        <input type="text" class="form-control" id="destination_secondary" placeholder="srt://2.2.2.2:2222">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="delay_seconds">Start Offset (Optional - Delay in seconds)</label>
+                        <input type="number" class="form-control" id="delay_seconds" placeholder="0" min="0">
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Start Stream</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const fileSelection = document.getElementById("fileSelection");
+        const fileSelectorContainer = document.getElementById("fileSelectorContainer");
+        const fileList = document.getElementById("fileList");
+
+        // Show/hide file selector based on selection
+        fileSelection.addEventListener("change", function () {
+            if (this.value === "select") {
+                fileSelectorContainer.style.display = "block";
+                loadFilesFromS3(); // Load file list when needed
+            } else {
+                fileSelectorContainer.style.display = "none";
+            }
+        });
+
+        // Load available files from S3
+        function loadFilesFromS3() {
+            fetch("/files", { 
+                headers: { "x-api-key": localStorage.getItem("api_key") } 
+            })
+            .then(response => response.json())
+            .then(data => {
+                fileList.innerHTML = ""; // Clear previous items
+                if (data.files.length > 0) {
+                    data.files.forEach(file => {
+                        let option = document.createElement("option");
+                        option.value = file;
+                        option.textContent = file;
+                        fileList.appendChild(option);
+                    });
+                } else {
+                    let option = document.createElement("option");
+                    option.value = "";
+                    option.textContent = "No files available";
+                    option.disabled = true;
+                    fileList.appendChild(option);
+                }
+            })
+            .catch(error => console.error("Error loading files:", error));
+        }
+
+        // Handle form submission
+        document.getElementById("start-stream-form").addEventListener("submit", function (event) {
+            event.preventDefault();
+
+            let selectedFile = null;
+            if (fileSelection.value === "select") {
+                selectedFile = fileList.value; // Get selected file from dropdown
+            }
+
+            const requestData = {
+                input_type: "file",
+                file: selectedFile, // Either selected file or null for random
+                duration: document.getElementById("duration").value,
+                destination: [document.getElementById("destination").value],
+                start_offset: document.getElementById("delay_seconds").value ? parseInt(document.getElementById("delay_seconds").value) : 0,
+                redundant: document.getElementById("redundant").checked
+            };
+
+            fetch("/start-stream", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "x-api-key": localStorage.getItem("api_key")
+                },
+                body: JSON.stringify(requestData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log("Stream started:", data);
+                $('#startStreamModal').modal('hide'); // Close modal on success
+            })
+            .catch(error => console.error("Error starting stream:", error));
+        });
+    });
+</script>

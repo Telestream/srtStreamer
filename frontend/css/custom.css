@@ -1,0 +1,99 @@
+/* Import Inter font */
+body,
+.modal-content {
+    color: rgb(227, 232, 239); /* Set default text color */
+    font-size: 10px; /* Set font size */
+    line-height: 16px; /* Set line height */
+}
+
+/* Background color for the main container and modals */
+body,
+.modal-content {
+    background-color: rgb(28, 33, 52); /* Set background color */
+}
+
+/* Button colors */
+.btn-primary, .btn-success {
+    background-color: rgb(50, 113, 200);
+    border-color: rgb(50, 113, 200);
+}
+
+/* Button styles */
+.btn-success {
+    transition: background-color 0.3s ease, border-color 0.3s ease; /* Smooth transition */
+}
+
+/* Prevent button color change on active and focus states */
+.btn-success:active,
+.btn-success:focus,
+.btn-success:hover {
+    background-color: rgb(50, 113, 200) !important; /* Maintain the same color on hover, active, and focus */
+    border-color: rgb(50, 113, 200) !important; /* Keep the same border color on hover */
+    box-shadow: none; /* Remove any box shadow */
+}
+
+/* Ensure consistent border color when button is active */
+.btn-success:active {
+    border-color: rgb(50, 113, 200) !important; /* Set active border color */
+}
+
+/* Remove default Bootstrap outline on buttons */
+.btn:focus {
+    outline: none; /* Remove outline on focus */
+}
+
+/* Card styles */
+.card {
+    border: 2px solid rgb(71, 131, 223);
+    background-color: rgb(28, 33, 52); /* Consistent with main background */
+    color: rgb(227, 232, 239); /* Set text color */
+}
+
+/* Ensure the 'Stop' button remains red */
+.btn-danger {
+    background-color: red;
+    border-color: red;
+}
+
+/* Input fields: same background color as the page, with white border */
+.form-control {
+    background-color: rgb(28, 33, 52); /* Keep background consistent */
+    color: white; /* Set text color to white */
+    border: 1px solid white; /* White border */
+}
+
+/* Ensure text color remains white at all times */
+.form-control::placeholder {
+    color: white; /* Placeholder text color */
+}
+
+/* Input fields: focused border color, background remains the same */
+.form-control:focus {
+    border-color: rgb(71, 131, 223); /* Change border color on focus */
+    background-color: rgb(28, 33, 52); /* Ensure background stays the same */
+    box-shadow: none; /* Remove default Bootstrap shadow */
+}
+
+/* Autofill styles to keep consistency */
+input:-webkit-autofill {
+    background-color: rgb(28, 33, 52) !important; /* Background color */
+    color: white !important; /* Text color */
+    border: 1px solid white !important; /* Keep border consistent */
+}
+
+/* Styles for input fields when they are focused or filled */
+input:focus,
+input {
+    color: white !important; /* Ensure text color remains white */
+}
+
+/* Remove outline for buttons */
+.btn:focus {
+    outline: none; /* Remove outline on focus */
+}
+
+/* Consistent active border for buttons */
+.btn:active {
+    border-color: rgb(50, 113, 200) !important; /* Ensure border color stays the same when active */
+    box-shadow: none; /* Remove box shadow on active */
+}
