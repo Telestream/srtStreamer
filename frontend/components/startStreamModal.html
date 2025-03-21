@@ -65,6 +65,12 @@
         const fileSelectorContainer = document.getElementById("fileSelectorContainer");
         const fileList = document.getElementById("fileList");
 
+        
+        document.getElementById("redundant").addEventListener("change", function() {
+                const secondaryContainer = document.getElementById("secondaryDestinationContainer");
+                secondaryContainer.style.display = this.checked ? "block" : "none";
+            });
+
         // Show/hide file selector based on selection
         fileSelection.addEventListener("change", function () {
             if (this.value === "select") {
@@ -116,7 +122,7 @@
                 duration: document.getElementById("duration").value,
                 destination: [document.getElementById("destination").value],
                 start_offset: document.getElementById("delay_seconds").value ? parseInt(document.getElementById("delay_seconds").value) : 0,
-                redundant: document.getElementById("redundant").checked
+                redundant: document.getElementById("redundant").checked,
             };
 
             fetch("/start-stream", {

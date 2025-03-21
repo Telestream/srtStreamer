@@ -1,4 +1,5 @@
 const API_KEY_KEY = 'apiKey'; 
+const stoppedBranches = {}; 
 const LOGIN_KEY = 'isLoggedIn';
 const EXPIRATION_KEY = 'loginExpiration';
 let currentStreams = []; // Global variable to store active streams
@@ -118,22 +119,31 @@ async function updateStreamCards(streams) {
             : "";
 
         const isRedundant = stream.status.redundant ? "Yes" : "No";
-        const stopRandomButton = stream.status.redundant ? 
-            `<button class="btn btn-secondary mt-2" onclick="stopRandomSource('${stream.stream_id}')">Disable One Stream</button>` 
-            : '';
-        
         let destinationDisplay = '';
-        if (Array.isArray(stream.status.destination)) {
-            destinationDisplay = stream.status.destination.map(dest => 
-                `<p>${dest} <span class="bandwidth" data-stream-id="${stream.stream_id}" data-destination="${dest}">Loading...</span> Mbps</p>`
-            ).join("");
-        } else if (typeof stream.status.destination === "string" && stream.status.destination.includes(",")) {
-            const destinations = stream.status.destination.split(",");
-            destinationDisplay = destinations.map(dest => 
-                `<p>${dest.trim()} <span class="bandwidth" data-stream-id="${stream.stream_id}" data-destination="${dest.trim()}">Loading...</span> Mbps</p>`
-            ).join("");
+        if (stream.status.redundant) {
+            if (Array.isArray(stream.status.destination)) {
+                destinationDisplay = stream.status.destination.map((dest, index) => {
+                    const branch = index === 0 ? "primary" : "secondary";
+                    const isStopped = stoppedBranches[`${stream.stream_id}-${branch}`] === true;
+                    const buttonLabel = isStopped ? "Restart" : "Stop";
+                    const buttonClass = isStopped ? "btn-success" : "btn-warning";
+                    return `
+                        <p>${dest} 
+                            <button class="btn ${buttonClass} btn-sm ml-2" onclick="toggleTransmission('${stream.stream_id}', '${branch}')">${buttonLabel}</button>
+                        </p>`;
+                }).join("");
+            } else {
+                destinationDisplay = `<p>${stream.status.destination} 
+                    <button class="btn btn-warning btn-sm ml-2" onclick="toggleTransmission('${stream.stream_id}', 'primary')">Stop</button>
+                </p>`;
+            }
         } else {
-            destinationDisplay = `<p>${stream.status.destination} <span class="bandwidth" data-stream-id="${stream.stream_id}" data-destination="${stream.status.destination}">Loading...</span> Mbps</p>`;
+            // For non-redundant streams, just show the destination text.
+            if (Array.isArray(stream.status.destination)) {
+                destinationDisplay = stream.status.destination.map(dest => `<p>${dest}</p>`).join("");
+            } else {
+                destinationDisplay = `<p>${stream.status.destination}</p>`;
+            }
         }
 
         const card = document.createElement('div');
@@ -151,14 +161,10 @@ async function updateStreamCards(streams) {
                     <p><strong>Remaining Duration:</strong> ${Math.floor(stream.remaining_duration)} seconds</p>
                     ${errorMessage}
                     <button class="btn btn-danger mt-2" onclick="stopStream('${stream.stream_id}')">Stop Stream</button>
-                    ${stopRandomButton}
                 </div>
             </div>
         `;
         streamContainer.appendChild(card);
-
-        // Fetch and update bandwidth for this stream
-        fetchBandwidth(stream.stream_id);
     });
 }
 
@@ -186,46 +192,45 @@ async function stopRandomSource(streamId) {
         console.error("Error stopping random source:", error);
     }
 }
-// Fetch and update bandwidth per stream
-async function fetchBandwidth(streamId) {
+
+// Function to stop or restart a specific transmission
+async function toggleTransmission(streamId, branch) {
     const apiKey = localStorage.getItem(API_KEY_KEY);
-    console.log(`Fetching bandwidth for streamId: ${streamId}`);
+    const button = document.querySelector(`button[onclick="toggleTransmission('${streamId}', '${branch}')"]`);
+    const isStopping = button.innerText === "Stop";
+    const endpoint = isStopping ? "stop-random-source" : "restart-source";
 
     try {
-        const response = await fetch(`${baseURL}/bandwidth/${streamId}`, {
-            headers: { 'x-api-key': apiKey }
+        const response = await fetch(`${baseURL}/${endpoint}/${streamId}?branch=${branch}`, { 
+            method: 'POST',
+            headers: {
+                'x-api-key': apiKey
+            }
         });
 
         if (response.ok) {
-            const data = await response.json();
-            console.log(`Received bandwidth for stream ${streamId}:`, data);
-            updateBandwidthDisplay(streamId, data.bandwidth);
+            if (isStopping) {
+                // Mark the branch as stopped in the global state
+                stoppedBranches[`${streamId}-${branch}`] = true;
+                button.innerText = "Restart";
+                button.classList.remove("btn-warning");
+                button.classList.add("btn-success");
+            } else {
+                // Remove the branch from the stopped state
+                delete stoppedBranches[`${streamId}-${branch}`];
+                button.innerText = "Stop";
+                button.classList.remove("btn-success");
+                button.classList.add("btn-warning");
+            }
         } else {
-            console.error(`Failed to fetch bandwidth for stream ${streamId}:`, response.status);
+            console.error(`Failed to ${isStopping ? "stop" : "restart"} transmission for branch ${branch}:`, response.status);
         }
     } catch (error) {
-        console.error(`Error fetching bandwidth for stream ${streamId}:`, error);
+        console.error(`Error toggling transmission for branch ${branch}:`, error);
     }
 }
 
-// Update the bandwidth values in the UI
-function updateBandwidthDisplay(streamId, bandwidthData) {
-    document.querySelectorAll(`.bandwidth[data-stream-id="${streamId}"]`).forEach(span => {
-        const destination = span.getAttribute("data-destination");
-        if (bandwidthData[destination]) {
-            span.textContent = `${bandwidthData[destination]}`;
-        } else {
-            span.textContent = "N/A";
-        }
-    });
-}
-
-// Periodically update bandwidth for all active streams
-setInterval(() => {
-    currentStreams.forEach(stream => {
-        fetchBandwidth(stream.stream_id);
-    });
-}, 1000);
+ 
 
 document.addEventListener("DOMContentLoaded", function () {
     attachUploadEventListeners();
@@ -324,6 +329,10 @@ function attachEventListeners() {
             toggleFileSelector();
         });
     }
+    document.getElementById("redundant").addEventListener("change", function() {
+        const secondaryContainer = document.getElementById("secondaryDestinationContainer");
+        secondaryContainer.style.display = this.checked ? "block" : "none";
+    });
 
     // Ensure correct UI state when modal opens
     $('#startStreamModal').on('show.bs.modal', function () {
