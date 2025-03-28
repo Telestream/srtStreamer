@@ -10,9 +10,6 @@ WORKDIR /app
 # Copy project files
 COPY . .
 
-# Copy media files into the container
-COPY media /app/media
-
 # Install dependencies
 RUN pip install fastapi uvicorn requests python-dotenv boto3 python-multipart
 
