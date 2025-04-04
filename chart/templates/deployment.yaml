@@ -27,7 +27,7 @@ spec:
         - name: srtstreamer
           env:
             - name: ALLOWED_ORIGINS
-              value: '["http://localhost:8000", "http://srtstreamer.telestreamcloud.net"]
+              value: '["http://localhost:8000", "http://srtstreamer.telestreamcloud.net"]'
             - name: MAX_STREAMS
               value: "10"
             - name: AWS_S3_BUCKET
