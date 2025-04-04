@@ -1,0 +1,23 @@
+image:
+  repository: quay.io/telestream/srtstreamer
+  tag: 
+replicaCount: 1
+
+imagePullSecrets:
+priorityClassName:
+
+ingress:
+  annotations:
+  className: alb
+  hosts:
+    - host: srtstreamer.telestreamcloud.net
+      paths:
+        - path: /
+          pathType: Prefix
+
+serviceAccount:
+  annotations:
+
+service:
+  type: NodePort
+  annotations:

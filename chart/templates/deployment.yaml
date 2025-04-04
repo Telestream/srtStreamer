@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: srtstreamer
+  labels:
+    app.kubernetes.io/name: srtstreamer
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: srtstreamer
+  template:
+    metadata:
+      app.kubernetes.io/name: srtstreamer
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if .Values.priorityClassName }}
+      priorityClassName: {{ .Values.priorityClassName }}
+      {{- end }}
+      serviceAccountName: srtstreamer
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: srtstreamer
+          env:
+            - name: ALLOWED_ORIGINS
+              value: '["http://localhost:8000", "http://srtstreamer.telestreamcloud.net"]
+            - name: MAX_STREAMS
+              value: "10"
+            - name: AWS_S3_BUCKET
+              value: telestream-srtstreamer
+            - name: AWS_REGION
+              value: us-east-1
+            - name: TEMP_DIR
+              value:  "./temp"
+            - name: USERS
+              value: '{"Admin": "t3l3str3amR0cks!"}'
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          ports:
+            - name: http
+              containerPort: 8000
+              protocol: TCP
