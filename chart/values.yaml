@@ -6,6 +6,10 @@ replicaCount: 1
 imagePullSecrets:
 priorityClassName:
 
+podSecurityContext: {}
+
+securityContext: {}
+
 ingress:
   annotations:
   className: alb
