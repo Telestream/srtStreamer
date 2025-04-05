@@ -11,7 +11,8 @@ spec:
       app.kubernetes.io/name: srtstreamer
   template:
     metadata:
-      app.kubernetes.io/name: srtstreamer
+      labels:
+        app.kubernetes.io/name: srtstreamer
     spec:
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
