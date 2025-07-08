@@ -24,12 +24,25 @@ jobs:
         id: buildx
         uses: docker/setup-buildx-action@v1
 
+      - name: Retrieve quay creds from Vault
+        id: quay-creds
+        uses: hashicorp/vault-action@v3
+        with:
+          method: jwt
+          path: jwt-github-actions
+          url: https://telestream-vault-cluster-public-vault-35590643.1620190f.z1.hashicorp.cloud:8200
+          namespace: admin 
+          role: srtstreamer
+          secrets: |
+            secret/data/github/srtstreamer/quay username | QUAY_USERNAME;
+            secret/data/github/srtstreamer/quay password | QUAY_PASSWORD
+
       - name: Login to Quay.io
         uses: docker/login-action@v3
         with:
           registry: quay.io
-          username: ${{ secrets.QUAY_USERNAME }}
-          password: ${{ secrets.QUAY_PASSWORD }}
+          username: ${{ env.QUAY_USERNAME }}
+          password: ${{ steps.quay-creds.outputs.QUAY_PASSWORD }}
 
       - name: Docker meta
         id: meta
